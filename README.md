@@ -1,6 +1,6 @@
-**Update** 2018-12-01. I am archiving this project. The original use case was to enable the configuration of wifi, over wifi, like many IOT devices on the market. It has worked well for me for this purpose. However, many of the issues people have been reporting as bugs are simply other opinions on how it should work for them, and outside of the original use case. Unfortunately, I don't have the personal resources to help in these requests. If others are willing to be contributors I would be grateful; until then, this project is for reference only.
+**Update - 20180601**: Any future development will happen on this new fork. Hoping add stability as well as new SOCs. If you are interesrted in joining the [txn2](https://txn2.com) team please email human@txn2.com.
 
-**Update**: Looking for contributors / maintainers.
+**Update**: Tested and functioning on well on the [Raspberry Pi 3 B+](https://amzn.to/2jfXhCA) and [Raspberry Pi 3 B](https://amzn.to/2Kq9Doa). Looking to support additional SOCs in upcoming versions. (Disclosure: the Pi links to Amazon are affiliate links, why not?)
 
 **NOTICE**: This project is intended to aid in developing "configure wifi over wifi" solutions for IOT projects using the Raspberry Pi. The main use case for this project is to reproduce functionality common to devices like Nest or Echo, where the user turns on the device, connects to it and configures it for wifi. I have over 800 devices running this software in production and all have had their wifi configured using it. 
 
