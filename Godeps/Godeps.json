@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/cjimti/iotwifi",
+	"ImportPath": "github.com/txn2/txwifi",
 	"GoVersion": "go1.9",
 	"GodepVersion": "v80",
 	"Deps": [

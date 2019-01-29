@@ -6,12 +6,12 @@
 
 **This is not a captive portal project. While I have personaly used it for this, it requires additional networking and can be unstable. I don't support this use and so your millage may vary.**
 
-**iotwifi** is only expected to run properly on stock Raspberry Pis and not tested on any other hardware configurations.
+**txwifi** is only expected to run properly on stock Raspberry Pis and not tested on any other hardware configurations.
 
 # IOT Wifi (Raspberry Pi AP + Client)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/cjimti/iotwifi)](https://goreportcard.com/report/github.com/cjimti/iotwifi)
-[![GoDoc](https://godoc.org/github.com/cjimti/iotwifi/iotwifi?status.svg)](https://godoc.org/github.com/cjimti/iotwifi/iotwifi)
+[![Go Report Card](https://goreportcard.com/badge/github.com/txn2/txwifi)](https://goreportcard.com/report/github.com/txn2/txwifi)
+[![GoDoc](https://godoc.org/github.com/txn2/txwifi/iotwifi?status.svg)](https://godoc.org/github.com/txn2/txwifi/iotwifi)
 [![Docker Container Image Size](https://shields.beevelop.com/docker/image/image-size/cjimti/iotwifi/latest.svg)](https://hub.docker.com/r/cjimti/iotwifi/)
 [![Docker Container Layers](https://shields.beevelop.com/docker/image/layers/cjimti/iotwifi/latest.svg)](https://hub.docker.com/r/cjimti/iotwifi/)
 [![Docker Container Pulls](https://img.shields.io/docker/pulls/cjimti/iotwifi.svg)](https://hub.docker.com/r/cjimti/iotwifi/)
@@ -131,7 +131,7 @@ started quickly I'll show you how to use a pre-built Docker Image. At
 only 16MB this little image contains everything you need. The image
 is based on [Alpine Linux] and contains [hostapd], [wpa_supplicant] and
 [dnsmasq], along with a compiled wifi management utility written in go,
-the source is found in this repository: https://github.com/cjimti/iotwifi.
+the source is found in this repository: https://github.com/txn2/txwifi.
 
 ```bash
 # Pull the IOT Wifi Docker Image
@@ -152,7 +152,7 @@ Use the default configuration file and location for testing:
 ```bash
 # Download the default configuration file
 
-$ wget https://raw.githubusercontent.com/cjimti/iotwifi/master/cfg/wificfg.json
+$ wget https://raw.githubusercontent.com/txn2/txwifi/master/cfg/wificfg.json
 
 ```
 
