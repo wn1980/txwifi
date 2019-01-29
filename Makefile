@@ -1,5 +1,5 @@
 IMAGE    ?= cjimti/iotwifi
-NAME     ?= iotwifi
+NAME     ?= txwifi
 VERSION  ?= 1.0.4
 
 all: build push
@@ -19,8 +19,8 @@ dev_build:
 
 dev_run:
 	sudo docker run --rm -it --privileged --network=host \
-                   -v $(CURDIR):/go/src/github.com/cjimti/iotwifi \
-                   -w /go/src/github.com/cjimti/iotwifi \
+                   -v $(CURDIR):/go/src/github.com/txn2/txwifi \
+                   -w /go/src/github.com/txn2/txwifi \
                    --name=$(NAME) $(IMAGE):latest
 
 

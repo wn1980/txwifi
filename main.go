@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/bhoriuchi/go-bunyan/bunyan"
-	"github.com/cjimti/iotwifi/iotwifi"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/txn2/txwifi/iotwifi"
 )
 
 // ApiReturn structures a message for returned API calls.
@@ -25,7 +25,7 @@ type ApiReturn struct {
 func main() {
 
 	logConfig := bunyan.Config{
-		Name:   "iotwifi",
+		Name:   "txwifi",
 		Stream: os.Stdout,
 		Level:  bunyan.LogLevelDebug,
 	}

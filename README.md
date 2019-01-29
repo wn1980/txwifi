@@ -2,10 +2,16 @@
 
 **Update**: Tested and functioning on well on the [Raspberry Pi 3 B+](https://amzn.to/2jfXhCA) and [Raspberry Pi 3 B](https://amzn.to/2Kq9Doa). Looking to support additional SOCs in upcoming versions. (Disclosure: the Pi links to Amazon are affiliate links, why not?)
 
+**NOTICE**: This project is intended to aid in developing "configure wifi over wifi" solutions for IOT projects using the Raspberry Pi. The main use case for this project is to reproduce functionality common to devices like Nest or Echo, where the user turns on the device, connects to it and configures it for wifi. I have over 800 devices running this software in production and all have had their wifi configured using it. 
+
+**This is not a captive portal project. While I have personaly used it for this, it requires additional networking and can be unstable. I don't support this use and so your millage may vary.**
+
+**txwifi** is only expected to run properly on stock Raspberry Pis and not tested on any other hardware configurations.
+
 # IOT Wifi (Raspberry Pi AP + Client)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/cjimti/iotwifi)](https://goreportcard.com/report/github.com/cjimti/iotwifi)
-[![GoDoc](https://godoc.org/github.com/cjimti/iotwifi/iotwifi?status.svg)](https://godoc.org/github.com/cjimti/iotwifi/iotwifi)
+[![Go Report Card](https://goreportcard.com/badge/github.com/txn2/txwifi)](https://goreportcard.com/report/github.com/txn2/txwifi)
+[![GoDoc](https://godoc.org/github.com/txn2/txwifi/iotwifi?status.svg)](https://godoc.org/github.com/txn2/txwifi/iotwifi)
 [![Docker Container Image Size](https://shields.beevelop.com/docker/image/image-size/cjimti/iotwifi/latest.svg)](https://hub.docker.com/r/cjimti/iotwifi/)
 [![Docker Container Layers](https://shields.beevelop.com/docker/image/layers/cjimti/iotwifi/latest.svg)](https://hub.docker.com/r/cjimti/iotwifi/)
 [![Docker Container Pulls](https://img.shields.io/docker/pulls/cjimti/iotwifi.svg)](https://hub.docker.com/r/cjimti/iotwifi/)
@@ -74,6 +80,10 @@ with the **IOT Wifi** container.
 # prevent wpa_supplicant from starting on boot
 $ sudo systemctl mask wpa_supplicant.service
 
+# rename wpa_supplicant on the host to ensure that it is not
+# used.
+sudo mv /sbin/wpa_supplicant /sbin/no_wpa_supplicant
+
 # kill any running processes named wpa_supplicant
 $ sudo pkill wpa_supplicant
 ```
@@ -121,7 +131,7 @@ started quickly I'll show you how to use a pre-built Docker Image. At
 only 16MB this little image contains everything you need. The image
 is based on [Alpine Linux] and contains [hostapd], [wpa_supplicant] and
 [dnsmasq], along with a compiled wifi management utility written in go,
-the source is found in this repository: https://github.com/cjimti/iotwifi.
+the source is found in this repository: https://github.com/txn2/txwifi.
 
 ```bash
 # Pull the IOT Wifi Docker Image
@@ -142,7 +152,7 @@ Use the default configuration file and location for testing:
 ```bash
 # Download the default configuration file
 
-$ wget https://raw.githubusercontent.com/cjimti/iotwifi/master/cfg/wificfg.json
+$ wget https://raw.githubusercontent.com/txn2/txwifi/master/cfg/wificfg.json
 
 ```
 
@@ -189,6 +199,17 @@ $ docker run --rm --privileged --net host \
       -v $(pwd)/wificfg.json:/cfg/wificfg.json \
       cjimti/iotwifi
 ```
+
+Optionally, you can also provide a `wpa_supplicant.conf`, like so:
+
+```bash
+$ docker run --rm --privileged --net host \
+      -v $(pwd)/wificfg.json:/cfg/wificfg.json \
+      -v <HOST_PATH>/wpa_supplicant.conf:<CONTAINER_PATH>/wpa_supplicant.conf \
+      cjimti/iotwifi
+```
+
+Where `<CONTAINER_PATH>` is the path to `wpa_supplicant.conf` specified in `wificfg.json`.
 
 The IOT Wifi container outputs logs in the JSON format. While this makes
 them a bit more challenging to read, we can feed them directly (or indirectly)
