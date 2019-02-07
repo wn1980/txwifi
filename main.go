@@ -109,7 +109,7 @@ func main() {
 		var creds iotwifi.WpaCredentials
 		marshallPost(w, r, &creds)
 
-		blog.Info("Connect Handler Got: ssid:|%s| psk:|%s|", creds.Ssid, creds.Psk)
+		blog.Info("Connect Handler Got: ssid:|%s| psk:|redacted|", creds.Ssid)
 
 		connection, err := wpacfg.ConnectNetwork(creds)
 		if err != nil {
