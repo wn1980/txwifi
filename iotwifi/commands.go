@@ -79,3 +79,13 @@ func (c *Command) StartDnsmasq() {
 	cmd := exec.Command("dnsmasq", args...)
 	go c.Runner.ProcessCmd("dnsmasq", cmd)
 }
+
+func (c *Command) killIt(it string) {
+	args := []string{
+		it,
+	}
+
+	cmd := exec.Command("killall", args...)
+	cmdId := "killall " + it
+	go c.Runner.ProcessCmd(cmdId, cmd)
+}
