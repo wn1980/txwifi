@@ -201,4 +201,9 @@ func (c *CmdRunner) ProcessCmd(id string, cmd *exec.Cmd) {
 	if err != nil {
 		panic(err)
 	}
+
+	c.Log.Debug("ProcessCmd waiting %s", id)
+	err = cmd.Wait()
+	c.Log.Debug("ProcessCmd done %s got %s ", id, err)
+
 }
