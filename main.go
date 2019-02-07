@@ -41,6 +41,7 @@ func main() {
 
 	cfgUrl := setEnvIfEmpty("IOTWIFI_CFG", "cfg/wificfg.json")
 	port := setEnvIfEmpty("IOTWIFI_PORT", "8080")
+	allowKill := setEnvIfEmpty("WIFI_ALLOW_KILL","false")
 
 	go iotwifi.RunWifi(blog, messages, cfgUrl)
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
@@ -195,7 +196,9 @@ func main() {
 	r.HandleFunc("/status", statusHandler)
 	r.HandleFunc("/connect", connectHandler).Methods("POST")
 	r.HandleFunc("/scan", scanHandler)
-	r.HandleFunc("/kill", killHandler)
+	if allowKill == "true" {
+		r.HandleFunc("/kill", killHandler)
+	}
 	http.Handle("/", r)
 
 	// CORS
