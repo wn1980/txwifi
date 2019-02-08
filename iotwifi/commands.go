@@ -80,6 +80,15 @@ func (c *Command) StartDnsmasq() {
 	go c.Runner.ProcessCmd("dnsmasq", cmd)
 }
 
+func	(c *Command) StartHostAPD(){
+	args := []string{
+		"/etc/hostapd/hostapd.conf",
+	}
+
+	cmd := exec.Command("hostapd", args...)
+	go c.Runner.ProcessCmd("hostapd", cmd)
+}
+
 func (c *Command) killIt(it string) {
 	args := []string{
 		it,

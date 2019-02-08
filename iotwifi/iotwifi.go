@@ -36,6 +36,26 @@ type CmdMessage struct {
 	Stdin   *io.WriteCloser
 }
 
+func hostAPdConfig(wpa *WpaCfg) {
+	cfg := []byte(`interface=uap0
+ssid=` + wpa.WpaCfg.HostApdCfg.Ssid + `
+hw_mode=g
+channel=` + wpa.WpaCfg.HostApdCfg.Channel + `
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=` + wpa.WpaCfg.HostApdCfg.WpaPassphrase + `
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP`)
+	err := ioutil.WriteFile("/etc/hostapd/hostapd.conf", cfg, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 // loadCfg loads the configuration.
 func loadCfg(cfgLocation string) (*SetupCfg, error) {
 
@@ -106,7 +126,12 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 	})
 
 	wpacfg := NewWpaCfg(log, cfgLocation)
-	wpacfg.StartAP()
+	command.RemoveApInterface()
+	command.AddApInterface()
+	command.UpApInterface()
+	command.ConfigureApInterface()
+	hostAPdConfig(wpacfg)
+	command.StartHostAPD()
 
 	time.Sleep(10 * time.Second)
 

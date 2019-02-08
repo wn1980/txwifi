@@ -1,7 +1,6 @@
 package iotwifi
 
 import (
-	"bufio"
 	"bytes"
 	"os/exec"
 	"regexp"
@@ -53,75 +52,6 @@ func NewWpaCfg(log bunyan.Logger, cfgLocation string) *WpaCfg {
 	return &WpaCfg{
 		Log:    log,
 		WpaCfg: setupCfg,
-	}
-}
-
-// StartAP starts AP mode.
-func (wpa *WpaCfg) StartAP() {
-	wpa.Log.Info("Starting Hostapd.")
-
-	command := &Command{
-		Log:      wpa.Log,
-		SetupCfg: wpa.WpaCfg,
-	}
-
-	command.RemoveApInterface()
-	command.AddApInterface()
-	command.UpApInterface()
-	command.ConfigureApInterface()
-
-	cmd := exec.Command("hostapd", "-d", "/dev/stdin")
-
-	// pipes
-	hostapdPipe, _ := cmd.StdinPipe()
-	cmdStdoutReader, err := cmd.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-
-	messages := make(chan string, 1)
-
-	stdOutScanner := bufio.NewScanner(cmdStdoutReader)
-	go func() {
-		for stdOutScanner.Scan() {
-			wpa.Log.Info("HOSTAPD GOT: %s", stdOutScanner.Text())
-			messages <- stdOutScanner.Text()
-		}
-	}()
-
-	cfg := `interface=uap0
-ssid=` + wpa.WpaCfg.HostApdCfg.Ssid + `
-hw_mode=g
-channel=` + wpa.WpaCfg.HostApdCfg.Channel + `
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=` + wpa.WpaCfg.HostApdCfg.WpaPassphrase + `
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP`
-
-	wpa.Log.Info("Hostapd CFG: %s", cfg)
-	hostapdPipe.Write([]byte(cfg))
-
-	cmd.Start()
-	hostapdPipe.Close()
-
-	for {
-		out := <-messages // Block until we receive a message on the channel
-		if strings.Contains(out, "uap0: AP-DISABLED") {
-			wpa.Log.Info("Hostapd DISABLED")
-			//cmd.Process.Kill()
-			//cmd.Wait()
-
-			return
-
-		}
-		if strings.Contains(out, "uap0: AP-ENABLED") {
-			wpa.Log.Info("Hostapd ENABLED")
-			return
-		}
 	}
 }
 
