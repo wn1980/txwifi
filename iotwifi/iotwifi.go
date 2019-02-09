@@ -137,20 +137,7 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 
 	command.StartWpaSupplicant()
 
-	// Scan
-	time.Sleep(5 * time.Second)
-	wpacfg.ScanNetworks()
-
 	command.StartDnsmasq()
-
-	// TODO: check to see if we are stuck in a scanning state before
-	// if in a scanning state set a timeout before resetting
-	go func() {
-		for {
-			wpacfg.ScanNetworks()
-			time.Sleep(30 * time.Second)
-		}
-	}()
 
 	// staticFields for logger
 	staticFields := make(map[string]interface{})

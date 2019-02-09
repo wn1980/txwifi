@@ -182,45 +182,55 @@ func cfgMapper(data []byte) map[string]string {
 // ScanNetworks returns a map of WpaNetwork data structures.
 func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	wpaNetworks := make(map[string]WpaNetwork, 0)
-
-	scanOut, err := exec.Command("wpa_cli", "-i", "wlan0", "scan").Output()
+	bssid := ""
+	ssid := ""
+	freq := ""
+	flags := ""
+	signalLevel := ""
+	networkListOut, err := exec.Command("iwlist", "uap0", "scan").Output()
 	if err != nil {
 		wpa.Log.Fatal(err)
 		return wpaNetworks, err
 	}
-	scanOutClean := strings.TrimSpace(string(scanOut))
 
-	// wait one second for results
-	time.Sleep(1 * time.Second)
-
-	if scanOutClean == "OK" {
-		networkListOut, err := exec.Command("wpa_cli", "-i", "wlan0", "scan_results").Output()
-		if err != nil {
-			wpa.Log.Fatal(err)
-			return wpaNetworks, err
+	networkListOutArr := strings.Split(string(networkListOut), "\n")
+	fieldsFound := 0
+	for _, netListOutLine := range networkListOutArr[1:] {
+		if strings.Contains(netListOutLine, "Address") {
+			bssid = strings.Fields(netListOutLine)[4]
+			fieldsFound = 1
+		}
+		if strings.Contains(netListOutLine, "Frequency") {
+			freq = strings.Split(strings.Split(netListOutLine, ":")[1], " ")[0]
+			fieldsFound++
+		}
+		if strings.Contains(netListOutLine, "Signal level") {
+			signalLevel = strings.Split(netListOutLine, "=")[2]
+			fieldsFound++
+		}
+		if strings.Contains(netListOutLine, "ESSID") {
+			ssid = strings.Split(netListOutLine, "\"")[1]
+			fieldsFound++
+		}
+		if strings.Contains(netListOutLine, "IEEE") {
+			flags = strings.Split(netListOutLine, "IEEE ")[1]
+			fieldsFound++
 		}
 
-		networkListOutArr := strings.Split(string(networkListOut), "\n")
-		for _, netRecord := range networkListOutArr[1:] {
-			if strings.Contains(netRecord, "[P2P]") {
-				continue
+		if fieldsFound == 5 {
+			wpaNetworks[ssid] = WpaNetwork{
+				Bssid:       bssid,
+				Frequency:   freq,
+				SignalLevel: signalLevel,
+				Flags:       flags,
+				Ssid:        ssid,
 			}
-
-			fields := strings.Fields(netRecord)
-
-			if len(fields) > 4 {
-				ssid := strings.Join(fields[4:], " ")
-				wpaNetworks[ssid] = WpaNetwork{
-					Bssid:       fields[0],
-					Frequency:   fields[1],
-					SignalLevel: fields[2],
-					Flags:       fields[3],
-					Ssid:        ssid,
-				}
-			}
+			bssid = ""
+			ssid = ""
+			freq = ""
+			flags = ""
+			signalLevel = ""
 		}
-
 	}
-
 	return wpaNetworks, nil
 }
