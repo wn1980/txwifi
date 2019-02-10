@@ -196,22 +196,29 @@ func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	networkListOutArr := strings.Split(string(networkListOut), "\n")
 	fieldsFound := 0
 	for _, netListOutLine := range networkListOutArr[1:] {
+		//           Cell 01 - Address: xx:yy:zz:aa:bb:cc
 		if strings.Contains(netListOutLine, "Address") {
 			bssid = strings.Fields(netListOutLine)[4]
 			fieldsFound = 1
 		}
+		//                    Frequency:5.785 GHz
 		if strings.Contains(netListOutLine, "Frequency") {
 			freq = strings.Split(strings.Split(netListOutLine, ":")[1], " ")[0]
 			fieldsFound++
 		}
+		//                    Quality=69/70  Signal level=-41 dBm
 		if strings.Contains(netListOutLine, "Signal level") {
 			signalLevel = strings.Split(netListOutLine, "=")[2]
 			fieldsFound++
 		}
+		//                    ESSID:"networkname"
+		//This will break in the ?unlikely? event that the ESSID
+		//  has a " in it.
 		if strings.Contains(netListOutLine, "ESSID") {
 			ssid = strings.Split(netListOutLine, "\"")[1]
 			fieldsFound++
 		}
+		//                    IE: IEEE 802.11i/WPA2 Version 1
 		if strings.Contains(netListOutLine, "IEEE") {
 			flags = strings.Split(netListOutLine, "IEEE ")[1]
 			fieldsFound++
