@@ -139,6 +139,17 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 
 	command.StartDnsmasq()
 
+}
+
+func HandleLog(log bunyan.Logger, messages chan CmdMessage) {
+
+	cmdRunner := CmdRunner{
+		Log:      log,
+		Messages: messages,
+		Handlers: make(map[string]func(cmsg CmdMessage), 0),
+		Commands: make(map[string]*exec.Cmd, 0),
+	}
+
 	// staticFields for logger
 	staticFields := make(map[string]interface{})
 
