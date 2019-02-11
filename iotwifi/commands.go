@@ -51,7 +51,6 @@ func (c *Command) CheckApInterface() {
 func (c *Command) StartWpaSupplicant() {
 
 	args := []string{
-		"-d",
 		"-Dnl80211",
 		"-iwlan0",
 		"-c" + c.SetupCfg.WpaSupplicantCfg.CfgFile,
