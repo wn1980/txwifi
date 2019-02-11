@@ -44,6 +44,7 @@ func main() {
 	allowKill := setEnvIfEmpty("WIFI_ALLOW_KILL","false")
 	static := setEnvIfEmpty("IOTWIFI_STATIC", "/static/")
 
+	go iotwifi.HandleLog(blog, messages)
 	go iotwifi.RunWifi(blog, messages, cfgUrl)
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 

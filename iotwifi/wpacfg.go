@@ -65,6 +65,22 @@ func (wpa *WpaCfg) ConfiguredNetworks() string {
 	return string(netOut)
 }
 
+func interfaceState(iface string) string {
+	// regex for state
+	rState := regexp.MustCompile("(?m)wpa_state=(.*)\n")
+	stateOut, err := exec.Command("wpa_cli", "-i", iface, "status").Output()
+	if err != nil {
+		return "none"
+	}
+	ms := rState.FindSubmatch(stateOut)
+	if len(ms) > 0 {
+		state := string(ms[1])
+		// see https://developer.android.com/reference/android/net/wifi/SupplicantState.html
+		return state
+	}
+	return "none"
+}
+
 // ConnectNetwork connects to a wifi network
 func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	connection := WpaConnection{}

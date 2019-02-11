@@ -97,6 +97,11 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 
 // RunWifi starts AP and Station modes.
 func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
+	staticFields := make(map[string]interface{})
+	lastInterfaceState := "none"
+	curInterfaceState := "none"
+	loopcount := 0
+	isApOn := false
 
 	log.Info("Loading IoT Wifi...")
 
@@ -126,18 +131,62 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 	})
 
 	wpacfg := NewWpaCfg(log, cfgLocation)
+
 	command.RemoveApInterface()
-	command.AddApInterface()
-	command.UpApInterface()
-	command.ConfigureApInterface()
-	hostAPdConfig(wpacfg)
-	command.StartHostAPD()
+	command.StartWpaSupplicant() //wpa_supplicant
 
-	time.Sleep(10 * time.Second)
+	for {
+		// if interfaceState(wlan0) == "CONNECTED" then { stop uap0 } else { start uap0 }
 
-	command.StartWpaSupplicant()
+		staticFields["cmd_id"] = "State change"
 
-	command.StartDnsmasq()
+		curInterfaceState = interfaceState("wlan0")
+		if lastInterfaceState != curInterfaceState {
+			log.Info(staticFields, "Begin: " + curInterfaceState)
+			loopcount = 0
+			for {
+				curInterfaceState = interfaceState("wlan0")
+				if lastInterfaceState == curInterfaceState {
+					break
+				} else {
+					//todo: change this to a sane number ?6? -- 30 seconds totoal
+					if loopcount > 5 {
+						lastInterfaceState = interfaceState("wlan0")
+						log.Info(staticFields, "New: " + lastInterfaceState)
+						if lastInterfaceState == "COMPLETED" {
+							if isApOn == true{
+								log.Info(staticFields, "Turn off AP")
+								command.killIt("hostapd")
+								command.killIt("dnsmasq")
+								command.RemoveApInterface()
+								isApOn = false
+							}
+						} else {
+							if isApOn == false {
+								log.Info(staticFields, "Turn on AP")
+								command.killIt("wpa_supplicant") //Todo: not entirely sure this is required, test further.
+								time.Sleep(1 * time.Second)
+								hostAPdConfig(wpacfg)
+								command.StartHostAPD() //hostapd
+								time.Sleep(1 * time.Second)
+								command.StartWpaSupplicant()
+								time.Sleep(1 * time.Second)
+								command.StartDnsmasq() //dnsmasq
+								isApOn = true
+							}
+						}
+						break
+					}
+					log.Info(staticFields, "Transition: " + lastInterfaceState + " -> " + curInterfaceState)
+					loopcount ++
+					//todo: change this to a sane number ?5 seconds? -- 30 seconds total
+					time.Sleep(1 * time.Second)
+				}
+			}
+		}
+		//Todo: change this to a sane number -- ?30? seconds?
+		time.Sleep(5 * time.Second)
+	}
 
 }
 
@@ -227,6 +276,6 @@ func (c *CmdRunner) ProcessCmd(id string, cmd *exec.Cmd) {
 
 	c.Log.Debug("ProcessCmd waiting %s", id)
 	err = cmd.Wait()
-	c.Log.Debug("ProcessCmd done %s got %s ", id, err.Error())
+	c.Log.Debug("ProcessCmd done %s ", id)
 
 }
