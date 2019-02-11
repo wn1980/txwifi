@@ -167,6 +167,8 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 								command.killIt("wpa_supplicant") //Todo: not entirely sure this is required, test further.
 								time.Sleep(1 * time.Second)
 								command.AddApInterface()
+								command.UpApInterface()
+								command.ConfigureApInterface()
 								hostAPdConfig(wpacfg)
 								command.StartHostAPD() //hostapd
 								time.Sleep(1 * time.Second)
