@@ -82,8 +82,12 @@ func interfaceState(iface string) string {
 }
 
 // ConnectNetwork connects to a wifi network
+//Todo: make this function return nothing so that it can be called async.
+//Todo: remove network if connection fails.
 func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	connection := WpaConnection{}
+
+	//Todo: sleep ?10? seconds.
 
 	// 1. Add a network
 	addNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "add_network").Output()
@@ -196,6 +200,7 @@ func cfgMapper(data []byte) map[string]string {
 }
 
 // ScanNetworks returns a map of WpaNetwork data structures.
+//Todo: if wpa_supplicant does not go away.. this can got back to wpa_cli.
 func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	wpaNetworks := make(map[string]WpaNetwork, 0)
 	bssid := ""
