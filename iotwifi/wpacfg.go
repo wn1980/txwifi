@@ -83,7 +83,6 @@ func interfaceState(iface string) string {
 
 // ConnectNetwork connects to a wifi network
 //Todo: make this function return nothing so that it can be called async.
-//Todo: remove network if connection fails.
 func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	connection := WpaConnection{}
 
@@ -162,6 +161,16 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 
 		time.Sleep(3 * time.Second)
 	}
+
+	// remove network
+	wpa.Log.Info("WPA remove net: %s", net)
+	removeNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "remove_network", net).Output()
+	if err != nil {
+		wpa.Log.Fatal(err.Error())
+		return connection, err
+	}
+	removeNetStatus := strings.TrimSpace(string(removeNetOut))
+	wpa.Log.Info("WPA remove network got: %s", removeNetStatus)
 
 	connection.State = "FAIL"
 	connection.Message = "Unable to connection to " + creds.Ssid
