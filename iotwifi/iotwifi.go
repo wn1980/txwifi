@@ -98,8 +98,8 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 // RunWifi starts AP and Station modes.
 func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 	staticFields := make(map[string]interface{})
-	lastInterfaceState := "none"
-	curInterfaceState := "none"
+	lastInterfaceState := "NONE"
+	curInterfaceState := "NONE"
 	loopcount := 0
 	isApOn := false
 
@@ -177,7 +177,7 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 						}
 						break
 					}
-					log.Info(staticFields, "Transition: " + lastInterfaceState + " -> " + curInterfaceState)
+					log.Info(staticFields, "Transition from " + lastInterfaceState + " to " + curInterfaceState)
 					loopcount ++
 					//todo: change this to a sane number ?5 seconds? -- 30 seconds total
 					time.Sleep(1 * time.Second)
