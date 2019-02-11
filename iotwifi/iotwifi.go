@@ -164,7 +164,7 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 						} else {
 							if isApOn == false {
 								log.Info(staticFields, "Turn on AP")
-								command.killIt("wpa_supplicant") //Todo: not entirely sure this is required, test further.
+								command.killIt("wpa_supplicant")
 								time.Sleep(1 * time.Second)
 								command.AddApInterface()
 								command.UpApInterface()
