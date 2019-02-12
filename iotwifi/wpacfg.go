@@ -82,17 +82,17 @@ func interfaceState(iface string) string {
 }
 
 // ConnectNetwork connects to a wifi network
-//Todo: make this function return nothing so that it can be called async.
-func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
+func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 	connection := WpaConnection{}
 
-	//Todo: sleep ?10? seconds.
+	wpa.Log.Info("waiting 2 seconds before starting WPA config.")
+	time.Sleep(2 * time.Second)
 
 	// 1. Add a network
 	addNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "add_network").Output()
 	if err != nil {
 		wpa.Log.Fatal(err)
-		return connection, err
+		return
 	}
 	net := strings.TrimSpace(string(addNetOut))
 	wpa.Log.Info("WPA add network got: %s", net)
@@ -101,7 +101,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	addSsidOut, err := exec.Command("wpa_cli", "-i", "wlan0", "set_network", net, "ssid", "\""+creds.Ssid+"\"").Output()
 	if err != nil {
 		wpa.Log.Fatal(err)
-		return connection, err
+		return
 	}
 	ssidStatus := strings.TrimSpace(string(addSsidOut))
 	wpa.Log.Info("WPA add ssid got: %s", ssidStatus)
@@ -110,7 +110,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	addPskOut, err := exec.Command("wpa_cli", "-i", "wlan0", "set_network", net, "psk", "\""+creds.Psk+"\"").Output()
 	if err != nil {
 		wpa.Log.Fatal(err.Error())
-		return connection, err
+		return
 	}
 	pskStatus := strings.TrimSpace(string(addPskOut))
 	wpa.Log.Info("WPA psk got: %s", pskStatus)
@@ -119,7 +119,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	enableOut, err := exec.Command("wpa_cli", "-i", "wlan0", "enable_network", net).Output()
 	if err != nil {
 		wpa.Log.Fatal(err.Error())
-		return connection, err
+		return
 	}
 	enableStatus := strings.TrimSpace(string(enableOut))
 	wpa.Log.Info("WPA enable got: %s", enableStatus)
@@ -134,7 +134,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 		stateOut, err := exec.Command("wpa_cli", "-i", "wlan0", "status").Output()
 		if err != nil {
 			wpa.Log.Fatal("Got error checking state: %s", err.Error())
-			return connection, err
+			return
 		}
 		ms := rState.FindSubmatch(stateOut)
 
@@ -147,7 +147,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 				saveOut, err := exec.Command("wpa_cli", "-i", "wlan0", "save_config").Output()
 				if err != nil {
 					wpa.Log.Fatal(err.Error())
-					return connection, err
+					return
 				}
 				saveStatus := strings.TrimSpace(string(saveOut))
 				wpa.Log.Info("WPA save got: %s", saveStatus)
@@ -155,7 +155,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 				connection.Ssid = creds.Ssid
 				connection.State = state
 
-				return connection, nil
+				return
 			}
 		}
 
@@ -167,14 +167,14 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	removeNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "remove_network", net).Output()
 	if err != nil {
 		wpa.Log.Fatal(err.Error())
-		return connection, err
+		return
 	}
 	removeNetStatus := strings.TrimSpace(string(removeNetOut))
 	wpa.Log.Info("WPA remove network got: %s", removeNetStatus)
 
 	connection.State = "FAIL"
 	connection.Message = "Unable to connection to " + creds.Ssid
-	return connection, nil
+	return
 }
 
 // Status returns the WPA wireless status.

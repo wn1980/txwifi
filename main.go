@@ -112,17 +112,12 @@ func main() {
 
 		blog.Info("Connect Handler Got: ssid:|%s| psk:|redacted|", creds.Ssid)
 
-		//Todo: make this call async/return nothing.
-		connection, err := wpacfg.ConnectNetwork(creds)
-		if err != nil {
-			blog.Error(err.Error())
-			return
-		}
+		go wpacfg.ConnectNetwork(creds)
 
 		apiReturn := &ApiReturn{
 			Status:  "OK",
 			Message: "Connection",
-			Payload: connection,
+			Payload: "attempting to connect to " +creds.Ssid,
 		}
 
 		ret, err := json.Marshal(apiReturn)
