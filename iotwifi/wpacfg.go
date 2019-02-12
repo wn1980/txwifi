@@ -209,7 +209,6 @@ func cfgMapper(data []byte) map[string]string {
 }
 
 // ScanNetworks returns a map of WpaNetwork data structures.
-//Todo: if wpa_supplicant does not go away.. this can got back to wpa_cli.
 func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	wpaNetworks := make(map[string]WpaNetwork, 0)
 	bssid := ""
@@ -254,7 +253,7 @@ func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 			fieldsFound++
 		}
 
-		if fieldsFound == 5 {
+		if fieldsFound == 5 && ssid != "" {
 			wpaNetworks[ssid] = WpaNetwork{
 				Bssid:       bssid,
 				Frequency:   freq,
