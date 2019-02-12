@@ -216,7 +216,7 @@ func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	freq := ""
 	flags := ""
 	signalLevel := ""
-	networkListOut, err := exec.Command("iwlist", "uap0", "scan").Output()
+	networkListOut, err := exec.Command("iwlist", "wlan0", "scan").Output()
 	if err != nil {
 		wpa.Log.Fatal(err)
 		return wpaNetworks, err
