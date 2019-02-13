@@ -117,7 +117,7 @@ func main() {
 		apiReturn := &ApiReturn{
 			Status:  "OK",
 			Message: "Connection",
-			Payload: "attempting to connect to " +creds.Ssid,
+			Payload: "Attempting to connect to " +creds.Ssid,
 		}
 
 		ret, err := json.Marshal(apiReturn)
