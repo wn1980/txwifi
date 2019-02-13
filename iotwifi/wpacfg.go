@@ -91,7 +91,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 	// 1. Add a network
 	addNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "add_network").Output()
 	if err != nil {
-		wpa.Log.Fatal(err)
+		wpa.Log.Fatal(err.Error())
 		return
 	}
 	net := strings.TrimSpace(string(addNetOut))
@@ -100,7 +100,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 	// 2. Set the ssid for the new network
 	addSsidOut, err := exec.Command("wpa_cli", "-i", "wlan0", "set_network", net, "ssid", "\""+creds.Ssid+"\"").Output()
 	if err != nil {
-		wpa.Log.Fatal(err)
+		wpa.Log.Fatal(err.Error())
 		return
 	}
 	ssidStatus := strings.TrimSpace(string(addSsidOut))
