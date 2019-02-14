@@ -132,20 +132,35 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 
 	wpacfg := NewWpaCfg(log, cfgLocation)
 
+	//command.StartWpaSupplicant() //wpa_supplicant
+	log.Info(staticFields, "Turn on AP 1")
 	command.RemoveApInterface()
-	command.StartWpaSupplicant() //wpa_supplicant
+	command.AddApInterface()
+	command.UpApInterface()
+	command.ConfigureApInterface()
+	log.Info(staticFields, "Turn on AP 2")
+	time.Sleep(10 * time.Second)
+	hostAPdConfig(wpacfg)
+	command.StartHostAPD() //hostapd
+	log.Info(staticFields, "Turn on AP 3")
+	time.Sleep(10 * time.Second)
+	command.StartWpaSupplicant()
+	log.Info(staticFields, "Turn on AP 4")
+	time.Sleep(10 * time.Second)
+	command.StartDnsmasq() //dnsmasq
+	isApOn = true
 
 	for {
 		// if interfaceState(wlan0) == "CONNECTED" then { stop uap0 } else { start uap0 }
 
 		staticFields["cmd_id"] = "State change"
 
-		curInterfaceState = interfaceState("wlan0")
+		//curInterfaceState = interfaceState("wlan0")
 		if lastInterfaceState != curInterfaceState {
 			log.Info(staticFields, "Begin: " + curInterfaceState)
 			loopcount = 0
 			for {
-				curInterfaceState = interfaceState("wlan0")
+				//curInterfaceState = interfaceState("wlan0")
 				if lastInterfaceState == curInterfaceState {
 					break
 				} else {
