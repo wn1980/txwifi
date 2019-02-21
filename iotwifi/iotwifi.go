@@ -95,13 +95,19 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 	return v, err
 }
 
+func DetectWifi(signal chan<- string) {
+	for {
+		signal <- "AP"
+		time.Sleep(90 * time.Second)
+		signal <- "CL"
+		time.Sleep(90 * time.Second)
+	}
+
+}
+
 // RunWifi starts AP and Station modes.
-func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
+func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string, signal chan string) {
 	staticFields := make(map[string]interface{})
-	lastInterfaceState := "NONE"
-	curInterfaceState := "NONE"
-	loopcount := 0
-	isApOn := false
 
 	log.Info("Loading IoT Wifi...")
 
@@ -132,80 +138,28 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string) {
 
 	wpacfg := NewWpaCfg(log, cfgLocation)
 
-	//command.StartWpaSupplicant() //wpa_supplicant
-	log.Info(staticFields, "Turn on AP 1")
-	command.RemoveApInterface()
-	command.AddApInterface()
-	command.UpApInterface()
-	command.ConfigureApInterface()
-	log.Info(staticFields, "Turn on AP 2")
-	time.Sleep(10 * time.Second)
-	hostAPdConfig(wpacfg)
-	command.StartHostAPD() //hostapd
-	log.Info(staticFields, "Turn on AP 3")
-	time.Sleep(10 * time.Second)
-	command.StartWpaSupplicant()
-	log.Info(staticFields, "Turn on AP 4")
-	time.Sleep(10 * time.Second)
-	command.StartDnsmasq() //dnsmasq
-	isApOn = true
-
 	for {
-		// if interfaceState(wlan0) == "CONNECTED" then { stop uap0 } else { start uap0 }
-
-		staticFields["cmd_id"] = "State change"
-
-		//curInterfaceState = interfaceState("wlan0")
-		if lastInterfaceState != curInterfaceState {
-			log.Info(staticFields, "Begin: " + curInterfaceState)
-			loopcount = 0
-			for {
-				//curInterfaceState = interfaceState("wlan0")
-				if lastInterfaceState == curInterfaceState {
-					break
-				} else {
-					//todo: change this to a sane number ?6? -- 30 seconds totoal
-					if loopcount > 5 {
-						lastInterfaceState = interfaceState("wlan0")
-						log.Info(staticFields, "New: " + lastInterfaceState)
-						if lastInterfaceState == "COMPLETED" {
-							if isApOn == true{
-								log.Info(staticFields, "Turn off AP")
-								command.killIt("hostapd")
-								command.killIt("dnsmasq")
-								command.RemoveApInterface()
-								isApOn = false
-							}
-						} else {
-							if isApOn == false {
-								log.Info(staticFields, "Turn on AP")
-								command.killIt("wpa_supplicant")
-								time.Sleep(1 * time.Second)
-								command.AddApInterface()
-								command.UpApInterface()
-								command.ConfigureApInterface()
-								hostAPdConfig(wpacfg)
-								command.StartHostAPD() //hostapd
-								time.Sleep(1 * time.Second)
-								command.StartWpaSupplicant()
-								time.Sleep(1 * time.Second)
-								command.StartDnsmasq() //dnsmasq
-								isApOn = true
-							}
-						}
-						break
-					}
-					log.Info(staticFields, "Transition from " + lastInterfaceState + " to " + curInterfaceState)
-					loopcount ++
-					//todo: change this to a sane number ?5 seconds? -- 30 seconds total
-					time.Sleep(1 * time.Second)
-				}
-			}
+		mode := <-signal
+		if mode == "AP" {
+			log.Info(staticFields, "-=-=-=- start Access Point -=-=-=-")
+			command.killIt("wpa_supplicant")
+			time.Sleep(1 * time.Second)
+			command.AddApInterface()
+			command.UpApInterface()
+			command.ConfigureApInterface()
+			hostAPdConfig(wpacfg)
+			command.StartHostAPD() //hostapd
+			time.Sleep(1 * time.Second)
+			command.StartDnsmasq() //dnsmasq
 		}
-		//Todo: change this to a sane number -- ?30? seconds?
-		time.Sleep(5 * time.Second)
+		if mode == "CL" {
+			log.Info(staticFields, "-=-=-=- start Client -=-=-=-")
+			command.killIt("hostapd")
+			command.killIt("dnsmasq")
+			command.RemoveApInterface()
+			command.StartWpaSupplicant()
+		}
 	}
-
 }
 
 func HandleLog(log bunyan.Logger, messages chan CmdMessage) {

@@ -38,6 +38,7 @@ func main() {
 	blog.Info("Starting IoT Wifi...")
 
 	messages := make(chan iotwifi.CmdMessage, 1)
+	signal := make(chan string, 1)
 
 	cfgUrl := setEnvIfEmpty("IOTWIFI_CFG", "cfg/wificfg.json")
 	port := setEnvIfEmpty("IOTWIFI_PORT", "8080")
@@ -45,7 +46,8 @@ func main() {
 	static := setEnvIfEmpty("IOTWIFI_STATIC", "/static/")
 
 	go iotwifi.HandleLog(blog, messages)
-	go iotwifi.RunWifi(blog, messages, cfgUrl)
+	go iotwifi.RunWifi(blog, messages, cfgUrl, signal)
+	go iotwifi.DetectWifi(signal)
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 
 	apiPayloadReturn := func(w http.ResponseWriter, message string, payload interface{}) {

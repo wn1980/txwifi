@@ -97,5 +97,5 @@ func (c *Command) killIt(it string) {
 
 	cmd := exec.Command("killall", args...)
 	cmdId := "killall " + it
-	go c.Runner.ProcessCmd(cmdId, cmd)
+	c.Runner.ProcessCmd(cmdId, cmd)
 }
