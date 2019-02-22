@@ -48,7 +48,9 @@ wpa=2
 wpa_passphrase=` + wpa.WpaCfg.HostApdCfg.WpaPassphrase + `
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
-rsn_pairwise=CCMP`)
+rsn_pairwise=CCMP
+ctrl_interface=/var/run/hostapd
+ctrl_interface_group=0`)
 	err := ioutil.WriteFile("/etc/hostapd/hostapd.conf", cfg, 0600)
 	if err != nil {
 		panic(err)
