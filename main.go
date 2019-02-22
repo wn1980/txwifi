@@ -1,5 +1,9 @@
 // IoT Wifi Management
 
+
+//todo: if in AP mode, and there are no connected clients ?all_sta?
+// and there is a network defined in wpa_supplicant.conf
+// ocassionally ?5 minutes? got into CL mode..
 package main
 
 import (
@@ -13,6 +17,10 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/txn2/txwifi/iotwifi"
+)
+
+var (
+	Signal = make(chan string, 1)
 )
 
 // ApiReturn structures a message for returned API calls.
@@ -37,8 +45,9 @@ func main() {
 
 	blog.Info("Starting IoT Wifi...")
 
+	//Todo: is a queue of 1 blocking wpa,hostapd,dnsmasq?
 	messages := make(chan iotwifi.CmdMessage, 1)
-	signal := make(chan string, 1)
+
 
 	cfgUrl := setEnvIfEmpty("IOTWIFI_CFG", "cfg/wificfg.json")
 	port := setEnvIfEmpty("IOTWIFI_PORT", "8080")
@@ -46,8 +55,9 @@ func main() {
 	static := setEnvIfEmpty("IOTWIFI_STATIC", "/static/")
 
 	go iotwifi.HandleLog(blog, messages)
-	go iotwifi.RunWifi(blog, messages, cfgUrl, signal)
-	go iotwifi.DetectWifi(signal)
+	go iotwifi.RunWifi(blog, messages, cfgUrl, Signal)
+	Signal <- "CL"
+	go iotwifi.DetectWifi(blog, Signal)
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 
 	apiPayloadReturn := func(w http.ResponseWriter, message string, payload interface{}) {
@@ -98,11 +108,7 @@ func main() {
 	// handle /status POSTs json in the form of iotwifi.WpaConnect
 	statusHandler := func(w http.ResponseWriter, r *http.Request) {
 
-		status, err := wpacfg.Status()
-		if err != nil {
-			blog.Error(err.Error())
-			return
-		}
+		status, _ := wpacfg.Status()
 
 		apiPayloadReturn(w, "status", status)
 	}
@@ -130,6 +136,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(ret)
+		Signal <- "CL"
 	}
 
 	// scan for wifi networks
@@ -155,6 +162,38 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(ret)
+	}
+
+	//ToDo: remove
+	apHandler := func(w http.ResponseWriter, r *http.Request) {
+		blog.Info("Got ap")
+
+		apiReturn := &ApiReturn{
+			Status:  "OK",
+			Message: "Networks",
+			Payload: "ap",
+		}
+		ret, _ := json.Marshal(apiReturn)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(ret)
+		Signal <- "AP"
+	}
+
+	//ToDo: remove
+	clHandler := func(w http.ResponseWriter, r *http.Request) {
+		blog.Info("Got cl")
+
+		apiReturn := &ApiReturn{
+			Status:  "OK",
+			Message: "Networks",
+			Payload: "cl",
+		}
+		ret, _ := json.Marshal(apiReturn)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(ret)
+		Signal <- "CL"
 	}
 
 	// kill the application
@@ -196,6 +235,10 @@ func main() {
 	r.HandleFunc("/status", statusHandler)
 	r.HandleFunc("/connect", connectHandler).Methods("POST")
 	r.HandleFunc("/scan", scanHandler)
+	//Todo: these are temp, remove them
+	r.HandleFunc("/ap", apHandler)
+	r.HandleFunc("/cl", clHandler)
+	// ---
 	if allowKill == "true" {
 		r.HandleFunc("/kill", killHandler)
 	}

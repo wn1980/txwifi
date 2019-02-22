@@ -97,12 +97,45 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 	return v, err
 }
 
-func DetectWifi(signal chan<- string) {
+func DetectWifi(log bunyan.Logger, signal chan<- string) {
+	staticFields := make(map[string]interface{})
+	lastInterfaceState := "NONE"
+	curInterfaceState := "NONE"
+	loopcount := 0
+	log.Info("Detect Wifi...")
+	staticFields["cmd_id"] = "State change"
+	//todo: re-think this..
+	//  start on state change, requires X consistent reading.
+	//  restart count if state changes mid X count
 	for {
-		signal <- "AP"
-		time.Sleep(90 * time.Second)
-		signal <- "CL"
-		time.Sleep(90 * time.Second)
+		curInterfaceState = interfaceState("wlan0")
+		if lastInterfaceState != curInterfaceState {
+			log.Info(staticFields, "Begin: " + curInterfaceState)
+			loopcount = 0
+			for {
+				curInterfaceState = interfaceState("wlan0")
+				if lastInterfaceState == curInterfaceState {
+					break
+				} else {
+					//todo: change this to a sane number ?6? -- 30 seconds totoal
+					if loopcount > 5 {
+						lastInterfaceState = interfaceState("wlan0")
+						log.Info(staticFields, "New: " + lastInterfaceState)
+						if lastInterfaceState == "DISCONNECTED" || lastInterfaceState == "INACTIVE" {
+							signal <- "AP"
+						}
+						break
+					}
+					log.Info(staticFields, "Transition from " + lastInterfaceState + " to " + curInterfaceState)
+					loopcount ++
+					//todo: change this to a sane number ?5 seconds? -- 30 seconds total
+					time.Sleep(1 * time.Second)
+				}
+			}
+		}
+		//Todo: change this to a sane number -- ?30? seconds?
+		time.Sleep(5 * time.Second)
+
 	}
 
 }
@@ -142,10 +175,14 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string, si
 
 	for {
 		mode := <-signal
+		log.Info(staticFields, "Signal: " + mode)
 		if mode == "AP" {
 			log.Info(staticFields, "-=-=-=- start Access Point -=-=-=-")
 			command.killIt("wpa_supplicant")
+			command.killIt("hostapd")
+			command.killIt("dnsmasq")
 			time.Sleep(1 * time.Second)
+			command.RemoveApInterface()
 			command.AddApInterface()
 			command.UpApInterface()
 			command.ConfigureApInterface()
@@ -156,8 +193,10 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string, si
 		}
 		if mode == "CL" {
 			log.Info(staticFields, "-=-=-=- start Client -=-=-=-")
+			command.killIt("wpa_supplicant")
 			command.killIt("hostapd")
 			command.killIt("dnsmasq")
+			time.Sleep(1 * time.Second)
 			command.RemoveApInterface()
 			command.StartWpaSupplicant()
 		}

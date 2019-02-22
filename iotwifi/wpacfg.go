@@ -70,7 +70,7 @@ func interfaceState(iface string) string {
 	rState := regexp.MustCompile("(?m)wpa_state=(.*)\n")
 	stateOut, err := exec.Command("wpa_cli", "-i", iface, "status").Output()
 	if err != nil {
-		return "none"
+		return "NONE"
 	}
 	ms := rState.FindSubmatch(stateOut)
 	if len(ms) > 0 {
@@ -78,15 +78,15 @@ func interfaceState(iface string) string {
 		// see https://developer.android.com/reference/android/net/wifi/SupplicantState.html
 		return state
 	}
-	return "none"
+	return "NONE"
 }
 
 // ConnectNetwork connects to a wifi network
 func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 	connection := WpaConnection{}
 
-	wpa.Log.Info("waiting 2 seconds before starting WPA config.")
-	time.Sleep(2 * time.Second)
+	wpa.Log.Info("waiting 5 seconds before starting WPA config.")
+	time.Sleep(5 * time.Second)
 
 	// 1. Add a network
 	addNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "add_network").Output()
@@ -183,11 +183,12 @@ func (wpa *WpaCfg) Status() (map[string]string, error) {
 
 	stateOut, err := exec.Command("wpa_cli", "-i", "wlan0", "status").Output()
 	if err != nil {
-		wpa.Log.Fatal("Got error checking state: %s", err.Error())
+		wpa.Log.Warn("Got error checking state: %s", err.Error())
+		cfgMap["wpa_state"] = "NONE"
 		return cfgMap, err
+	} else {
+		cfgMap = cfgMapper(stateOut)
 	}
-
-	cfgMap = cfgMapper(stateOut)
 
 	return cfgMap, nil
 }

@@ -44,9 +44,9 @@
     }
     $( document ).ready(function() {
         getStatus();
-        intervalId = window.setInterval(function(){
-            getStatus();
-        }, 1000);
+        //intervalId = window.setInterval(function(){
+        //    getStatus();
+        //}, 1000);
         $('#main').text('Scanning....');
         $.getJSON("/scan", function (scan) {
             //$('#response').text(scan['status']);
