@@ -33,9 +33,6 @@
         $.getJSON("/status", function (response) {
             if (response['payload']['wpa_state'] == "COMPLETED") {
                 $('#status').text('Connected to: ' + response['payload']['ssid'] + ', IP Address: ' + response['payload']['ip_address'])
-                if ('ip_address' in response['payload']) {
-                    window.clearInterval(intervalId);
-                }
             } else {
                 $('#status').text('Not Connected.');
             }
@@ -43,9 +40,6 @@
     }
     $( document ).ready(function() {
         getStatus();
-        intervalId = window.setInterval(function(){
-            getStatus();
-        }, 3000);
         $('#main').text('Scanning....');
         $.getJSON("/scan", function (scan) {
             //$('#response').text(scan['status']);
