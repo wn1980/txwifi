@@ -4,6 +4,8 @@
 //todo: if in AP mode, and there are no connected clients ?all_sta?
 // and there is a network defined in wpa_supplicant.conf
 // ocassionally ?5 minutes? got into CL mode..
+
+// todo: update documentation!!!!
 package main
 
 import (
@@ -56,8 +58,12 @@ func main() {
 
 	go iotwifi.HandleLog(blog, messages)
 	go iotwifi.RunWifi(blog, messages, cfgUrl, Signal)
+	//Todo check to see if WPA has a network configured
+	// if none go directly to AP mode
 	Signal <- "CL"
-	go iotwifi.DetectWifi(blog, Signal)
+	go iotwifi.MonitorWPA(blog, Signal)
+	go iotwifi.MonitorAPD(blog, Signal)
+
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 
 	apiPayloadReturn := func(w http.ResponseWriter, message string, payload interface{}) {
@@ -164,38 +170,6 @@ func main() {
 		w.Write(ret)
 	}
 
-	//ToDo: remove
-	apHandler := func(w http.ResponseWriter, r *http.Request) {
-		blog.Info("Got ap")
-
-		apiReturn := &ApiReturn{
-			Status:  "OK",
-			Message: "Networks",
-			Payload: "ap",
-		}
-		ret, _ := json.Marshal(apiReturn)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(ret)
-		Signal <- "AP"
-	}
-
-	//ToDo: remove
-	clHandler := func(w http.ResponseWriter, r *http.Request) {
-		blog.Info("Got cl")
-
-		apiReturn := &ApiReturn{
-			Status:  "OK",
-			Message: "Networks",
-			Payload: "cl",
-		}
-		ret, _ := json.Marshal(apiReturn)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(ret)
-		Signal <- "CL"
-	}
-
 	// kill the application
 	killHandler := func(w http.ResponseWriter, r *http.Request) {
 		messages <- iotwifi.CmdMessage{Id: "kill"}
@@ -235,9 +209,6 @@ func main() {
 	r.HandleFunc("/status", statusHandler)
 	r.HandleFunc("/connect", connectHandler).Methods("POST")
 	r.HandleFunc("/scan", scanHandler)
-	//Todo: these are temp, remove them
-	r.HandleFunc("/ap", apHandler)
-	r.HandleFunc("/cl", clHandler)
 	// ---
 	if allowKill == "true" {
 		r.HandleFunc("/kill", killHandler)

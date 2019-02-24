@@ -65,7 +65,33 @@ func (wpa *WpaCfg) ConfiguredNetworks() string {
 	return string(netOut)
 }
 
-func interfaceState(iface string) string {
+func apdState(iface string) string {
+	rState := regexp.MustCompile("(?m)state=(.*)\n")
+	stateOut, err := exec.Command("hostapd_cli", "-i", iface, "status").Output()
+	if err != nil {
+		return "NONE"
+	}
+	ms := rState.FindSubmatch(stateOut)
+	if len(ms) > 0 {
+		state := string(ms[1])
+		return state
+	}
+	return "NONE"
+}
+
+func apdHasClient(iface string) bool {
+	apdClientListOut, err := exec.Command("hostapd_cli", "-i", iface, "all_sta").Output()
+	if err != nil {
+		return false
+	}
+	apdClientListOutArr := strings.Split(string(apdClientListOut), "\n")
+	if len(apdClientListOutArr) > 1 {
+		return true
+	}
+	return false
+}
+
+func wpaState(iface string) string {
 	// regex for state
 	rState := regexp.MustCompile("(?m)wpa_state=(.*)\n")
 	stateOut, err := exec.Command("wpa_cli", "-i", iface, "status").Output()
@@ -87,6 +113,16 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 
 	wpa.Log.Info("waiting 5 seconds before starting WPA config.")
 	time.Sleep(5 * time.Second)
+
+	// remove network
+	//Todo: document support for only 1 network
+	wpa.Log.Info("WPA remove net: %s", "0")
+	removeNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "remove_network", "0").Output()
+	if err != nil {
+		wpa.Log.Warn(err.Error())
+	}
+	removeNetStatus := strings.TrimSpace(string(removeNetOut))
+	wpa.Log.Info("WPA remove network got: %s", removeNetStatus)
 
 	// 1. Add a network
 	addNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "add_network").Output()
@@ -164,12 +200,12 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 
 	// remove network
 	wpa.Log.Info("WPA remove net: %s", net)
-	removeNetOut, err := exec.Command("wpa_cli", "-i", "wlan0", "remove_network", net).Output()
+	removeNetOut, err = exec.Command("wpa_cli", "-i", "wlan0", "remove_network", net).Output()
 	if err != nil {
 		wpa.Log.Fatal(err.Error())
 		return
 	}
-	removeNetStatus := strings.TrimSpace(string(removeNetOut))
+	removeNetStatus = strings.TrimSpace(string(removeNetOut))
 	wpa.Log.Info("WPA remove network got: %s", removeNetStatus)
 
 	connection.State = "FAIL"
@@ -219,7 +255,7 @@ func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	signalLevel := ""
 	networkListOut, err := exec.Command("iwlist", "wlan0", "scan").Output()
 	if err != nil {
-		wpa.Log.Fatal(err)
+		wpa.Log.Warn(err.Error())
 		return wpaNetworks, err
 	}
 

@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/bhoriuchi/go-bunyan/bunyan"
@@ -97,47 +98,67 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 	return v, err
 }
 
-func DetectWifi(log bunyan.Logger, signal chan<- string) {
+func MonitorAPD(log bunyan.Logger, signal chan<- string) {
+	//Todo: set reasonable timeout ?90 seconds?
+	var apdTimeout int64 = 90
 	staticFields := make(map[string]interface{})
-	lastInterfaceState := "NONE"
-	curInterfaceState := "NONE"
-	loopcount := 0
-	log.Info("Detect Wifi...")
-	staticFields["cmd_id"] = "State change"
-	//todo: re-think this..
-	//  start on state change, requires X consistent reading.
-	//  restart count if state changes mid X count
+	staticFields["cmd_id"] = " ~~ apd monitor ~~"
+	log.Info(staticFields,"Start.")
 	for {
-		curInterfaceState = interfaceState("wlan0")
-		if lastInterfaceState != curInterfaceState {
-			log.Info(staticFields, "Begin: " + curInterfaceState)
-			loopcount = 0
+		apd := apdState("uap0")
+		if apd == "ENABLED" {
+			startTime := time.Now().Unix()
+			log.Info(staticFields, apd + ", timeout in " + strconv.FormatInt(apdTimeout,10)  + " seconds")
 			for {
-				curInterfaceState = interfaceState("wlan0")
-				if lastInterfaceState == curInterfaceState {
-					break
-				} else {
-					//todo: change this to a sane number ?6? -- 30 seconds totoal
-					if loopcount > 5 {
-						lastInterfaceState = interfaceState("wlan0")
-						log.Info(staticFields, "New: " + lastInterfaceState)
-						if lastInterfaceState == "DISCONNECTED" || lastInterfaceState == "INACTIVE" {
-							signal <- "AP"
-						}
+				apd = apdState("uap0")
+				if startTime + apdTimeout < time.Now().Unix() {
+					if apdHasClient("uap0") {
+						log.Info(staticFields, "has client(s), timeout aborted")
 						break
 					}
-					log.Info(staticFields, "Transition from " + lastInterfaceState + " to " + curInterfaceState)
-					loopcount ++
-					//todo: change this to a sane number ?5 seconds? -- 30 seconds total
-					time.Sleep(1 * time.Second)
+					//Todo: check to see if WPA has any networks configured, if none, reset timer
+					log.Info(staticFields, "Timeout.")
+					signal <- "CL"
+					break
 				}
+				if apd != "ENABLED" {
+					log.Info(staticFields, apd + " timeout aborted ")
+					break
+				}
+				time.Sleep(1 * time.Second)
 			}
 		}
-		//Todo: change this to a sane number -- ?30? seconds?
-		time.Sleep(5 * time.Second)
-
+		time.Sleep(30 * time.Second)
 	}
 
+}
+
+func MonitorWPA(log bunyan.Logger, signal chan<- string) {
+	var wpaTimeout int64 = 90
+	staticFields := make(map[string]interface{})
+	staticFields["cmd_id"] = " ~~ wpa monitor ~~"
+	log.Info(staticFields,"Start.")
+	for {
+		wpa := wpaState("wlan0")
+		if wpa != "COMPLETED" && wpa != "NONE" {
+			startTime := time.Now().Unix()
+			log.Info(staticFields, wpa + ", timeout in " + strconv.FormatInt(wpaTimeout,10)  + " seconds")
+			for {
+				wpa = wpaState("wlan0")
+				if startTime + wpaTimeout < time.Now().Unix() {
+					log.Info(staticFields, "Timeout.")
+					signal <- "AP"
+					break
+				}
+				if wpa == "COMPLETED" {
+					log.Info(staticFields, wpa + " timeout aborted")
+					break
+				}
+				time.Sleep(1 * time.Second)
+			}
+		}
+		time.Sleep(30 * time.Second)
+	}
 }
 
 // RunWifi starts AP and Station modes.

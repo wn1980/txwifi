@@ -34,7 +34,6 @@
             if (response['payload']['wpa_state'] == "COMPLETED") {
                 $('#status').text('Connected to: ' + response['payload']['ssid'] + ', IP Address: ' + response['payload']['ip_address'])
                 if ('ip_address' in response['payload']) {
-                    $('#response').text('AP will go offline shortly.');
                     window.clearInterval(intervalId);
                 }
             } else {
@@ -44,9 +43,9 @@
     }
     $( document ).ready(function() {
         getStatus();
-        //intervalId = window.setInterval(function(){
-        //    getStatus();
-        //}, 1000);
+        intervalId = window.setInterval(function(){
+            getStatus();
+        }, 3000);
         $('#main').text('Scanning....');
         $.getJSON("/scan", function (scan) {
             //$('#response').text(scan['status']);
@@ -71,7 +70,7 @@
             url: '/connect',
             data: JSON.stringify(data),
             complete: function (response) {
-                $('#response').text(response['responseJSON']['payload']);
+                $('#response').text(response['responseJSON']['payload'] + '... Access Point will go offline shortly');
             }
         });
 
