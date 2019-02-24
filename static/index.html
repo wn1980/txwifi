@@ -28,7 +28,6 @@
 </div>
 <script src="/jquery-3.3.1.min.js"></script>
 <script  type = "text/javascript" language = "javascript">
-    var intervalId = null;
     function getStatus() {
         $.getJSON("/status", function (response) {
             if (response['payload']['wpa_state'] == "COMPLETED") {
@@ -43,15 +42,17 @@
         $('#main').text('Scanning....');
         $.getJSON("/scan", function (scan) {
             //$('#response').text(scan['status']);
-            if (scan['status'] == "OK") {
+            if (scan['status'] == "OK" && Object.keys(scan['payload']).length > 0) {
                 var selector = $('#selectWifi');
                 $.each(scan['payload'], function (i, item) {
                     if (!i.includes('\\x00')) {
                         selector.append($('<option></option>').val(i).html(i));
                     }
                 });
+                $('#main').text('Select Network');
+            } else {
+                $('#main').text('No Networks found, please refresh page');
             }
-            $('#main').text('Select Network');
         });
     });
     function submit() {
