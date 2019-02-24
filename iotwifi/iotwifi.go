@@ -201,22 +201,44 @@ func RunWifi(log bunyan.Logger, messages chan CmdMessage, cfgLocation string, si
 			command.killIt("wpa_supplicant")
 			command.killIt("hostapd")
 			command.killIt("dnsmasq")
-			time.Sleep(1 * time.Second)
+			log.Info(staticFields, "... wait for wpa_supplicant to finish")
+			for {
+				if wpaState("wlan0") == "NONE" {
+					log.Info(staticFields, "wpa_supplicant finished")
+					break
+				}
+			}
 			command.RemoveApInterface()
 			command.AddApInterface()
 			command.UpApInterface()
 			command.ConfigureApInterface()
 			hostAPdConfig(wpacfg)
 			command.StartHostAPD() //hostapd
-			time.Sleep(1 * time.Second)
+			log.Info(staticFields, "... wait for host_apd to start")
+			for {
+				if apdState("uap0") != "NONE" {
+					log.Info(staticFields, "host_apd started")
+					break
+				}
+			}
 			command.StartDnsmasq() //dnsmasq
 		}
 		if mode == "CL" {
+			if wpaState("wlan0") != "NONE" {
+				log.Info(staticFields, "-=-=-=- client already started. -=-=-=-")
+				continue
+			}
 			log.Info(staticFields, "-=-=-=- start Client -=-=-=-")
 			command.killIt("wpa_supplicant")
 			command.killIt("hostapd")
 			command.killIt("dnsmasq")
-			time.Sleep(1 * time.Second)
+			log.Info(staticFields, "... wait for host_apd to finish")
+			for {
+				if apdState("uap0") == "NONE" {
+					log.Info(staticFields, "host_apd finished")
+					break
+				}
+			}
 			command.RemoveApInterface()
 			command.StartWpaSupplicant()
 		}

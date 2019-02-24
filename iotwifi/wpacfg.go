@@ -111,8 +111,13 @@ func wpaState(iface string) string {
 func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) {
 	connection := WpaConnection{}
 
-	wpa.Log.Info("waiting 5 seconds before starting WPA config.")
-	time.Sleep(5 * time.Second)
+	wpa.Log.Info("-=-=- wait for wpa_supplicant to start -=-=-")
+	for {
+		if wpaState("wlan0") != "NONE" {
+			wpa.Log.Info("-=-=- wpa_supplicant started -=-=-")
+			break
+		}
+	}
 
 	// remove network
 	//Todo: document support for only 1 network
