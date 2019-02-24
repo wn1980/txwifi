@@ -23,10 +23,6 @@ import (
 	"github.com/txn2/txwifi/iotwifi"
 )
 
-var (
-	Signal = make(chan string, 1)
-)
-
 // ApiReturn structures a message for returned API calls.
 type ApiReturn struct {
 	Status  string      `json:"status"`
@@ -51,6 +47,7 @@ func main() {
 
 	//Todo: is a queue of 1 blocking wpa,hostapd,dnsmasq?
 	messages := make(chan iotwifi.CmdMessage, 1)
+	signal := make(chan string, 1)
 
 
 	cfgUrl := setEnvIfEmpty("IOTWIFI_CFG", "cfg/wificfg.json")
@@ -60,12 +57,12 @@ func main() {
 
 
 	go iotwifi.HandleLog(blog, messages)
-	go iotwifi.RunWifi(blog, messages, cfgUrl, Signal)
+	go iotwifi.RunWifi(blog, messages, cfgUrl, signal)
 	//Todo check to see if WPA has a network configured
 	// if none go directly to AP mode
-	Signal <- "CL"
-	go iotwifi.MonitorWPA(blog, Signal)
-	go iotwifi.MonitorAPD(blog, Signal)
+	signal <- "CL"
+	go iotwifi.MonitorWPA(blog, signal)
+	go iotwifi.MonitorAPD(blog, signal)
 
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 
