@@ -6,6 +6,8 @@
 // ocassionally ?5 minutes? got into CL mode..
 
 // todo: update documentation!!!!
+
+// todo: update Dockerfile
 package main
 
 import (
@@ -55,6 +57,7 @@ func main() {
 	port := setEnvIfEmpty("IOTWIFI_PORT", "8080")
 	allowKill := setEnvIfEmpty("WIFI_ALLOW_KILL","false")
 	static := setEnvIfEmpty("IOTWIFI_STATIC", "/static/")
+
 
 	go iotwifi.HandleLog(blog, messages)
 	go iotwifi.RunWifi(blog, messages, cfgUrl, Signal)
