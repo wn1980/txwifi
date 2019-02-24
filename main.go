@@ -2,6 +2,7 @@
 
 // todo: update documentation!!!!
 // todo: update Dockerfile
+// todo: listen for shutdown signal, remove uap0, kill wpa,apd,dnsmasq
 
 package main
 
