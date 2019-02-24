@@ -142,7 +142,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(ret)
-		Signal <- "CL"
+		signal <- "CL"
 	}
 
 	// scan for wifi networks
