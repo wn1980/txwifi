@@ -1,13 +1,8 @@
 // IoT Wifi Management
 
-
-//todo: if in AP mode, and there are no connected clients ?all_sta?
-// and there is a network defined in wpa_supplicant.conf
-// ocassionally ?5 minutes? got into CL mode..
-
 // todo: update documentation!!!!
-
 // todo: update Dockerfile
+
 package main
 
 import (
