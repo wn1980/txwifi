@@ -99,7 +99,6 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 }
 
 func MonitorAPD(log bunyan.Logger, signal chan<- string) {
-	//Todo: set reasonable timeout ?90 seconds?
 	var apdTimeout int64 = 90
 	staticFields := make(map[string]interface{})
 	staticFields["cmd_id"] = " ~~ apd monitor ~~"
