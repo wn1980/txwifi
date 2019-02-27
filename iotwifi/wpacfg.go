@@ -55,6 +55,7 @@ func NewWpaCfg(log bunyan.Logger, cfgLocation string) *WpaCfg {
 	}
 }
 
+/* Todo: this appears to be unused.
 // ConfiguredNetworks returns a list of configured wifi networks.
 func (wpa *WpaCfg) ConfiguredNetworks() string {
 	netOut, err := exec.Command("wpa_cli", "-i", "wlan0", "scan").Output()
@@ -64,6 +65,7 @@ func (wpa *WpaCfg) ConfiguredNetworks() string {
 
 	return string(netOut)
 }
+*/
 
 func apdState(iface string) string {
 	rState := regexp.MustCompile("(?m)state=(.*)\n")
