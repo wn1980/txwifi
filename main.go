@@ -51,16 +51,17 @@ func main() {
 	allowKill := setEnvIfEmpty("WIFI_ALLOW_KILL","false")
 	static := setEnvIfEmpty("IOTWIFI_STATIC", "/static/")
 
+	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 
 	go iotwifi.HandleLog(blog, messages)
 	go iotwifi.RunWifi(blog, messages, cfgUrl, signal)
-	//Todo check to see if WPA has a network configured
-	// if none go directly to AP mode
-	signal <- "CL"
+	if iotwifi.WpaSupplicantHasNetowrkConfig(wpacfg.WpaCfg.WpaSupplicantCfg.CfgFile) {
+		signal <- "CL"
+	} else {
+		signal <- "AP"
+	}
 	go iotwifi.MonitorWPA(blog, signal)
-	go iotwifi.MonitorAPD(blog, signal)
-
-	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
+	go iotwifi.MonitorAPD(blog, signal, wpacfg.WpaCfg.WpaSupplicantCfg.CfgFile)
 
 	apiPayloadReturn := func(w http.ResponseWriter, message string, payload interface{}) {
 		apiReturn := &ApiReturn{

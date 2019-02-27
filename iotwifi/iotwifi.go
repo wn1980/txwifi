@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bhoriuchi/go-bunyan/bunyan"
@@ -98,7 +99,7 @@ func loadCfg(cfgLocation string) (*SetupCfg, error) {
 	return v, err
 }
 
-func MonitorAPD(log bunyan.Logger, signal chan<- string) {
+func MonitorAPD(log bunyan.Logger, signal chan<- string, wpaSupplicantConfig string) {
 	var apdTimeout int64 = 90
 	staticFields := make(map[string]interface{})
 	staticFields["cmd_id"] = " ~~ apd monitor ~~"
@@ -111,11 +112,16 @@ func MonitorAPD(log bunyan.Logger, signal chan<- string) {
 			for {
 				apd = apdState("uap0")
 				if startTime + apdTimeout < time.Now().Unix() {
+					//check to see if APD has clients, if yes, reset timer
 					if apdHasClient("uap0") {
 						log.Info(staticFields, "has client(s), timeout aborted")
 						break
 					}
-					//Todo: check to see if WPA has any networks configured, if none, reset timer
+					//check to see if WPA has any networks configured, if none, reset timer
+					if !WpaSupplicantHasNetowrkConfig(wpaSupplicantConfig) {
+						log.Info(staticFields, "wpa_supplicant has no network config, timeout aborted")
+						break
+					}
 					log.Info(staticFields, "Timeout.")
 					signal <- "CL"
 					break
@@ -333,4 +339,18 @@ func (c *CmdRunner) ProcessCmd(id string, cmd *exec.Cmd) {
 	err = cmd.Wait()
 	c.Log.Debug("ProcessCmd done %s ", id)
 
+}
+
+func WpaSupplicantHasNetowrkConfig(wpaSupplicantConfig string) bool {
+	fileData, err := ioutil.ReadFile(wpaSupplicantConfig)
+	if err != nil {
+		panic(err)
+	}
+	lines := strings.Split(string(fileData), "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "network={") {
+			return true
+		}
+	}
+	return false
 }
