@@ -138,7 +138,7 @@ func MonitorAPD(log bunyan.Logger, signal chan<- string, wpaSupplicantConfig str
 
 }
 
-func MonitorWPA(log bunyan.Logger, signal chan<- string) {
+func MonitorWPA(log bunyan.Logger, signal chan<- string, dontFallBackToAP string) {
 	var wpaTimeout int64 = 90
 	staticFields := make(map[string]interface{})
 	staticFields["cmd_id"] = " ~~ wpa monitor ~~"
@@ -149,6 +149,10 @@ func MonitorWPA(log bunyan.Logger, signal chan<- string) {
 			startTime := time.Now().Unix()
 			log.Info(staticFields, wpa + ", timeout in " + strconv.FormatInt(wpaTimeout,10)  + " seconds")
 			for {
+				if dontFallBackToAP == "true" || dontFallBackToAP == "True" {
+					log.Info(staticFields, "...dontFallBackToAP enabled...")
+					break
+				}
 				wpa = wpaState("wlan0")
 				if startTime + wpaTimeout < time.Now().Unix() {
 					log.Info(staticFields, "Timeout.")

@@ -50,6 +50,7 @@ func main() {
 	port := setEnvIfEmpty("IOTWIFI_PORT", "8080")
 	allowKill := setEnvIfEmpty("WIFI_ALLOW_KILL","false")
 	static := setEnvIfEmpty("IOTWIFI_STATIC", "/static/")
+	dontFallBackToAP := setEnvIfEmpty("DONT_FALL_BACK_TO_AP", "false")
 
 	wpacfg := iotwifi.NewWpaCfg(blog, cfgUrl)
 
@@ -60,7 +61,7 @@ func main() {
 	} else {
 		signal <- "AP"
 	}
-	go iotwifi.MonitorWPA(blog, signal)
+	go iotwifi.MonitorWPA(blog, signal, dontFallBackToAP)
 	go iotwifi.MonitorAPD(blog, signal, wpacfg.WpaCfg.WpaSupplicantCfg.CfgFile)
 
 	apiPayloadReturn := func(w http.ResponseWriter, message string, payload interface{}) {
