@@ -214,7 +214,7 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	}
 
 	connection.State = "FAIL"
-	connection.Message = "Unable to connection to " + creds.Ssid
+	connection.Message = "Unable to connect to " + creds.Ssid
 	return connection, nil
 }
 
