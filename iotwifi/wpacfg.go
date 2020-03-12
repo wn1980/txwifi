@@ -255,7 +255,7 @@ func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 
 	scanOut, err := exec.Command("wpa_cli", "-i", "wlan0", "scan").Output()
 	if err != nil {
-		wpa.Log.Fatal(err)
+		wpa.Log.Fatal(err.Error())
 		return wpaNetworks, err
 	}
 	scanOutClean := strings.TrimSpace(string(scanOut))
@@ -266,7 +266,7 @@ func (wpa *WpaCfg) ScanNetworks() (map[string]WpaNetwork, error) {
 	if scanOutClean == "OK" {
 		networkListOut, err := exec.Command("wpa_cli", "-i", "wlan0", "scan_results").Output()
 		if err != nil {
-			wpa.Log.Fatal(err)
+			wpa.Log.Fatal(err.Error())
 			return wpaNetworks, err
 		}
 
