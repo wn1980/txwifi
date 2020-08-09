@@ -80,12 +80,15 @@ func (wpa *WpaCfg) StartAP() {
 	}
 
 	messages := make(chan string, 1)
+	blocked := true
 
 	stdOutScanner := bufio.NewScanner(cmdStdoutReader)
 	go func() {
 		for stdOutScanner.Scan() {
 			wpa.Log.Info("HOSTAPD GOT: %s", stdOutScanner.Text())
-			messages <- stdOutScanner.Text()
+			if blocked {
+				messages <- stdOutScanner.Text()
+			}
 		}
 	}()
 
@@ -115,11 +118,13 @@ rsn_pairwise=CCMP`
 			//cmd.Process.Kill()
 			//cmd.Wait()
 
+			blocked = false
 			return
 
 		}
 		if strings.Contains(out, "uap0: AP-ENABLED") {
 			wpa.Log.Info("Hostapd ENABLED")
+			blocked = false
 			return
 		}
 	}
