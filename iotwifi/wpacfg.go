@@ -179,6 +179,15 @@ func (wpa *WpaCfg) ConnectNetwork(creds WpaCredentials) (WpaConnection, error) {
 	}
 	enableStatus := strings.TrimSpace(string(enableOut))
 	wpa.Log.Info("WPA enable got: %s", enableStatus)
+	
+	// 5. Select the new network
+	selectOut, err := exec.Command("wpa_cli", "-i", "wlan0", "select_network", net).Output()
+	if err != nil {
+		wpa.Log.Fatal(err.Error())
+		return connection, err
+	}
+	selectStatus := strings.TrimSpace(string(selectOut))
+	wpa.Log.Info("WPA select got: %s", selectStatus)
 
 	// regex for state
 	rState := regexp.MustCompile("(?m)wpa_state=(.*)\n")
